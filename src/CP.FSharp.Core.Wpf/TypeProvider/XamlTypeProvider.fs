@@ -1,0 +1,140 @@
+﻿/// original source from https://github.com/fsprojects/FsXaml
+
+namespace CP.FSharp.Core.Wpf
+
+open System
+open System.IO
+open System.Reflection
+
+open Microsoft.FSharp.Core.CompilerServices
+open Microsoft.FSharp.Quotations
+
+open ProviderImplementation.ProvidedTypes
+
+open CP.FSharp.Core.Wpf.TypeProviders.Helper
+
+[<TypeProvider>]
+type public XamlTypeProvider(config : TypeProviderConfig) as this = 
+    inherit TypeProviderForNamespaces(config)
+
+    let assembly = Assembly.GetExecutingAssembly()
+    let nameSpace = this.GetType().Namespace    
+    let providerType = ProvidedTypeDefinition(assembly, nameSpace, "XAML", Some typeof<obj>, isErased = false)
+
+    let fileSystemWatchers = ResizeArray<IDisposable>()
+     
+    let assemblies = 
+        config.ReferencedAssemblies
+        |> Seq.choose (fun asm -> 
+            try
+                // This is a fix for #34: Previously, 64bit libraries could fail to load, which would make the type provider fail.
+                // By filtering out assemblies that don't load, we should still allow all relevent WPF assemblies to load
+                asm |> (IO.File.ReadAllBytes >> Assembly.Load >> Some)
+            with 
+            | _ -> None)
+        |> Array.ofSeq
+        
+    do
+        this.Disposing.Add((fun _ ->
+            for watcher in fileSystemWatchers do
+                watcher.Dispose() 
+            fileSystemWatchers.Clear()
+        ))
+    
+        providerType.DefineStaticParameters(
+            parameters =
+                [
+                    ProvidedStaticParameter("XamlResourceLocation", typeof<string>, parameterDefaultValue = "")
+                    ProvidedStaticParameter("XamlFileLocation",     typeof<string>, parameterDefaultValue = "")
+                ], 
+            instantiationFunction = (fun typeName parameterValues ->   
+                let resourcePath = string parameterValues.[0]
+                let filePath     = string parameterValues.[1]
+
+                let path, loadFromResource =
+                    match resourcePath = "", filePath = "" with
+                    |  true, true  ->
+                        failwith "Must specify either XamlResourceLocation or XamlFileLocation (but not both)"
+                    | false, false ->
+                        failwith "Can't specify both XamlResourceLocation and XamlFileLocation (but must specify one or the other)"
+                    |  true, false -> filePath, false
+                    | false, true  -> resourcePath, true
+
+                let resolvedFileName = findConfigFile config.ResolutionFolder path
+                watchForChanges this resolvedFileName |> Option.iter fileSystemWatchers.Add
+
+                use reader = File.OpenRead resolvedFileName
+                let xamlInfo = XamlParser.parseXaml resourcePath reader
+                let rootTypeInXaml = xamlInfo.RootType.UnderlyingType
+
+                let assemblyPath =
+                    let tempFolderName = Path.GetTempPath()                    
+                    let filename = "fswpf_" + Path.GetRandomFileName() + ".dll"
+                    Path.Combine(tempFolderName, filename)
+                let assemblyName = AssemblyName(Path.GetFileNameWithoutExtension(assemblyPath))
+                                            
+                let providedAssembly = ProvidedAssembly(assemblyName, assemblyPath)                
+                
+                // Implement IComponentConnector                
+                let iComponentConnectorType = typeof<System.Windows.Markup.IComponentConnector>
+
+                // Create a field for tracking whether we're initialized
+                let initializedField = ProvidedField(XamlTypeUtils.InitializedComponentFieldName, typeof<bool>)
+
+                // Make InitializeComponent public, since that matches C# expectations
+                // However, we're making it virtual, so subclasses can do extra work before/after if desired
+                let initializeComponentInterface = iComponentConnectorType.GetMethod("InitializeComponent")
+                let connectInterface = iComponentConnectorType.GetMethod("Connect")
+
+                let initializeComponentMethod = 
+                    ProvidedMethod("InitializeComponent", [ ], typeof<System.Void>, 
+                            invokeCode =
+                                fun args ->
+                                    match args with 
+                                    | [this] ->
+                                        let o = Expr.Coerce(this, typeof<obj>)
+                                        let isInit = Expr.FieldGet(this, initializedField)
+                                        let setInit = Expr.FieldSet(this, initializedField, Expr.Value(true))
+                                        <@@
+                                            if (not (%%isInit : bool)) then
+                                                (%%setInit)                                            
+                                                InjectXaml.from path loadFromResource (%%o : obj)                                            
+                                        @@>
+                                    | _ -> failwith "Wrong constructor arguments")
+                                        
+                    |> XamlTypeUtils.asInterfaceImplementation
+                let connectMethod = 
+                    ProvidedMethod("Connect", [ ProvidedParameter("connectionId", typeof<int>) ; ProvidedParameter("target", typeof<obj>) ], typeof<System.Void>, invokeCode = XamlTypeUtils.emptyInvokeCode)
+                    |> XamlTypeUtils.asInterfaceImplementation
+
+                let generatedType = 
+                    XamlTypeUtils.createProvidedType providedAssembly nameSpace typeName rootTypeInXaml (path, loadFromResource) initializeComponentMethod connectMethod initializedField xamlInfo 
+
+                generatedType.AddMember initializedField                
+
+                // Wire up IComponentConnector
+                generatedType.AddInterfaceImplementation iComponentConnectorType
+                generatedType.DefineMethodOverride(initializeComponentMethod, initializeComponentInterface)
+                generatedType.DefineMethodOverride(connectMethod, connectInterface)
+
+                // Add the type to our assembly
+                providedAssembly.AddTypes <| [ generatedType ]
+                generatedType))
+
+
+        this.AddNamespace(nameSpace, [ providerType ])
+
+    override __.ResolveAssembly(args) = 
+        let name = System.Reflection.AssemblyName(args.Name)
+        let existingAssembly = 
+            System.AppDomain.CurrentDomain.GetAssemblies()
+            |> Seq.append assemblies
+            |> Seq.tryFind(fun a -> System.Reflection.AssemblyName.ReferenceMatchesDefinition(name, a.GetName()))
+        match existingAssembly with
+        | Some a -> a
+        | None -> 
+            // Fallback to default behavior
+            base.ResolveAssembly(args)
+        
+[<assembly:TypeProviderAssembly>] 
+do()

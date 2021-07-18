@@ -5,7 +5,7 @@
 		<UseWPF>true</UseWPF>
 		<AllowedOutputExtensionsInPackageBuildOutputFolder>$(AllowedOutputExtensionsInPackageBuildOutputFolder);.pdb</AllowedOutputExtensionsInPackageBuildOutputFolder>
 		<GeneratePackageOnBuild>true</GeneratePackageOnBuild>
-		<Version>5.0.2</Version>
+		<Version>5.0.3</Version>
 		<Authors>Chris Pulman</Authors>
 		<Description>A port of https://github.com/fsprojects/FsXaml to support the latest .net frameworks</Description>
 		<PackageLicenseExpression>MIT</PackageLicenseExpression>
@@ -13,7 +13,7 @@
 		<PackageIcon>fswpf.png</PackageIcon>
 		<PackageIconUrl />
 		<RepositoryUrl>https://github.com/ChrisPulman/FSharp.Core.Wpf</RepositoryUrl>
-		<PackageTags>FSharp WPF XAML</PackageTags>
+		<PackageTags>FSharp;WPF;XAML;FSharp.Core</PackageTags>
 		<NeutralLanguage>en-GB</NeutralLanguage>
 	</PropertyGroup>
 

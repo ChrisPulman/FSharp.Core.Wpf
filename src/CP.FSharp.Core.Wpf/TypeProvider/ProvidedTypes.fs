@@ -21,7 +21,7 @@ open Microsoft.FSharp.Quotations.Patterns
 open Microsoft.FSharp.Core.CompilerServices
 
 [<AutoOpen>]
-module internal Utils = 
+module public Utils = 
     let K x = (fun () -> x)
     let isNull x = match x with null -> true | _ -> false
     let isNil x = match x with [] -> true | _ -> false
@@ -327,7 +327,7 @@ module internal Utils =
 //   - Likewise, some operations in these quotation values like "expr.Type" may be a bit fragile, possibly returning non cross-targeted types in
 //     the result. However those operations are not used by the F# compiler.
 [<AutoOpen>]
-module internal UncheckedQuotations =
+module public UncheckedQuotations =
 
     let qTy = typeof<Var>.Assembly.GetType("Microsoft.FSharp.Quotations.ExprConstInfo")
     assert (not (isNull qTy))
@@ -566,7 +566,7 @@ module internal UncheckedQuotations =
 
 /// Represents the type constructor in a provided symbol type.
 [<NoComparison>]
-type internal ProvidedTypeSymbolKind =
+type public ProvidedTypeSymbolKind =
     | SDArray
     | Array of int
     | Pointer
@@ -779,7 +779,7 @@ type public ProvidedTypeSymbol(kind: ProvidedTypeSymbolKind, typeArgs: Type list
 
     override this.ToString() = this.FullName
 
-type internal ProvidedSymbolMethod(genericMethodDefinition: MethodInfo, parameters: Type[], typeBuilder: ITypeBuilder) =
+type public ProvidedSymbolMethod(genericMethodDefinition: MethodInfo, parameters: Type[], typeBuilder: ITypeBuilder) =
     inherit MethodInfo()
 
     let convParam (p:ParameterInfo) =
@@ -825,7 +825,7 @@ type internal ProvidedSymbolMethod(genericMethodDefinition: MethodInfo, paramete
 
 
 [<AutoOpen>]
-module internal Misc =
+module public Misc =
 
 
     let mkParamArrayCustomAttributeData() =
@@ -1914,7 +1914,7 @@ and ProvidedTypeDefinition(isTgt: bool, container:TypeContainer, className: stri
 // A lightweight .NET assembly reader that fits in a single F# file.  Based on the well-tested Abstract IL
 // binary reader code.  Used by the type provider to read referenced asssemblies.
 
-module internal AssemblyReader =
+module public AssemblyReader =
 
     open System
     open System.Collections.Generic
@@ -1933,7 +1933,7 @@ module internal AssemblyReader =
 
         //---------------------------------------------------------------------
         // SHA1 hash-signing algorithm.  Used to get the public key token from
-        // the internal key.
+        // the public key.
         //---------------------------------------------------------------------
 
         // Little-endian encoding of int32 
@@ -6949,7 +6949,7 @@ namespace ProviderImplementation.ProvidedTypes
 
 
     [<AutoOpen>]
-    module internal Utils2 =
+    module public Utils2 =
 
         // A table tracking how wrapped type definition objects are translated to cloned objects.
         // Unique wrapped type definition objects must be translated to unique wrapper objects, based
@@ -7051,7 +7051,7 @@ namespace ProviderImplementation.ProvidedTypes
             lengthsEqAndForall2 ps1 ps2 (fun p1 p2 -> eqTypeAndILTypeWithInst inst2 p1.ParameterType p2.ParameterType)
 
 
-    type internal MethodSymbol2(gmd: MethodInfo, gargs: Type[], typeBuilder: ITypeBuilder) =
+    type public MethodSymbol2(gmd: MethodInfo, gargs: Type[], typeBuilder: ITypeBuilder) =
         inherit MethodInfo()
         let dty = gmd.DeclaringType
         let dinst = (if dty.IsGenericType then dty.GetGenericArguments() else [| |])
@@ -7095,7 +7095,7 @@ namespace ProviderImplementation.ProvidedTypes
 
 
      /// Represents a constructor in an instantiated type
-    type internal ConstructorSymbol (declTy: Type, inp: ConstructorInfo, typeBuilder: ITypeBuilder) =
+    type public ConstructorSymbol (declTy: Type, inp: ConstructorInfo, typeBuilder: ITypeBuilder) =
         inherit ConstructorInfo() 
         let gps = ((if declTy.IsGenericType then declTy.GetGenericArguments() else [| |]), [| |])
 
@@ -7127,7 +7127,7 @@ namespace ProviderImplementation.ProvidedTypes
         static member Make (typeBuilder: ITypeBuilder) (declTy: Type) md = ConstructorSymbol (declTy, md, typeBuilder) :> ConstructorInfo
 
      /// Represents a method in an instantiated type
-    type internal MethodSymbol (declTy: Type, inp: MethodInfo, typeBuilder: ITypeBuilder) =
+    type public MethodSymbol (declTy: Type, inp: MethodInfo, typeBuilder: ITypeBuilder) =
         inherit MethodInfo() 
         let gps1 = (if declTy.IsGenericType then declTy.GetGenericArguments() else [| |])
         let gps2 = inp.GetGenericArguments()
@@ -7171,7 +7171,7 @@ namespace ProviderImplementation.ProvidedTypes
         static member Make (typeBuilder: ITypeBuilder) (declTy: Type) md = MethodSymbol (declTy, md, typeBuilder) :> MethodInfo
 
      /// Represents a property in an instantiated type
-    type internal PropertySymbol (declTy: Type, inp: PropertyInfo, typeBuilder: ITypeBuilder) =
+    type public PropertySymbol (declTy: Type, inp: PropertyInfo, typeBuilder: ITypeBuilder) =
         inherit PropertyInfo() 
         let gps = ((if declTy.IsGenericType then declTy.GetGenericArguments() else [| |]), [| |])
 
@@ -7208,7 +7208,7 @@ namespace ProviderImplementation.ProvidedTypes
         static member Make (typeBuilder: ITypeBuilder) (declTy: Type) md = PropertySymbol (declTy, md, typeBuilder) :> PropertyInfo
 
      /// Represents an event in an instantiated type
-    type internal EventSymbol (declTy: Type, inp: EventInfo, typeBuilder: ITypeBuilder) =
+    type public EventSymbol (declTy: Type, inp: EventInfo, typeBuilder: ITypeBuilder) =
         inherit EventInfo()
         let gps = if declTy.IsGenericType then declTy.GetGenericArguments() else [| |]
 
@@ -7240,7 +7240,7 @@ namespace ProviderImplementation.ProvidedTypes
         static member Make (typeBuilder: ITypeBuilder) (declTy: Type) md = EventSymbol (declTy, md, typeBuilder) :> EventInfo
 
      /// Represents a field in an instantiated type
-    type internal FieldSymbol (declTy: Type, inp: FieldInfo, typeBuilder: ITypeBuilder) =
+    type public FieldSymbol (declTy: Type, inp: FieldInfo, typeBuilder: ITypeBuilder) =
         inherit FieldInfo() 
         let gps = if declTy.IsGenericType then declTy.GetGenericArguments() else [| |]
 
@@ -7274,7 +7274,7 @@ namespace ProviderImplementation.ProvidedTypes
 
     /// Represents the type constructor in a provided symbol type.
     [<RequireQualifiedAccess>]
-    type internal TypeSymbolKind =
+    type public TypeSymbolKind =
         | SDArray
         | Array of int
         | Pointer
@@ -8417,7 +8417,7 @@ namespace ProviderImplementation.ProvidedTypes
     //    - inlineValueBindings
 
     // Note, the QuotationSimplifier works over source quotations, not target quotations
-    type internal QuotationSimplifier(isGenerated: bool) =
+    type public QuotationSimplifier(isGenerated: bool) =
 
         let rec simplifyExpr q =
             match q with
@@ -9499,7 +9499,7 @@ namespace ProviderImplementation.ProvidedTypes
 namespace ProviderImplementation.ProvidedTypes
 
     #nowarn "1182"
-    module internal BinaryWriter =
+    module public BinaryWriter =
 
         open System
         open System.Diagnostics
@@ -13523,23 +13523,23 @@ namespace ProviderImplementation.ProvidedTypes
     open ProviderImplementation.ProvidedTypes.UncheckedQuotations
     
 
-    type internal ILLocalBuilder(i: int) =
+    type public ILLocalBuilder(i: int) =
         member __.LocalIndex = i
     
     [<RequireQualifiedAccess>]
-    type internal ILExceptionClauseBuilder =
+    type public ILExceptionClauseBuilder =
         | Finally of ILCodeLabel
         | Fault of ILCodeLabel
         | FilterCatch of ILCodeLabel * (ILCodeLabel * ILCodeLabel)
         | TypeCatch of ILCodeLabel * ILType
 
-    type internal ILExceptionBlockBuilder(i: ILCodeLabel, leave: ILCodeLabel) =
+    type public ILExceptionBlockBuilder(i: ILCodeLabel, leave: ILCodeLabel) =
         member __.StartIndex = i
         member __.Leave = leave
         member val EndIndex : int = 0 with get, set
         member val Clause : ILExceptionClauseBuilder option = None with get, set
 
-    type internal ILGenerator(methodName) =
+    type public ILGenerator(methodName) =
         let mutable locals =  ResizeArray<ILLocal>()
         let mutable instrs =  ResizeArray<ILInstr>()
         let mutable exceptions = ResizeArray<ILExceptionSpec>()
@@ -13623,7 +13623,7 @@ namespace ProviderImplementation.ProvidedTypes
         override __.ToString() = "generator for " + methodName
 
 
-    type internal ILFieldBuilder(enclosing: ILType, nm: string, fty: ILType, attrs: FieldAttributes) =
+    type public ILFieldBuilder(enclosing: ILType, nm: string, fty: ILType, attrs: FieldAttributes) =
 
         let mutable lit = None
         let cattrs = ResizeArray<ILCustomAttribute>()
@@ -13644,7 +13644,7 @@ namespace ProviderImplementation.ProvidedTypes
               Token = genToken() }
         override __.ToString() = "builder for " + nm
 
-    type internal ILGenericParameterBuilder(nm, attrs: GenericParameterAttributes) =
+    type public ILGenericParameterBuilder(nm, attrs: GenericParameterAttributes) =
 
         let mutable constraints = ResizeArray<ILType>()
         let cattrs = ResizeArray<ILCustomAttribute>()
@@ -13660,7 +13660,7 @@ namespace ProviderImplementation.ProvidedTypes
               Token = genToken() }
         override __.ToString() = "builder for " + nm
 
-    type internal ILParameterBuilder(ty: ILType) =
+    type public ILParameterBuilder(ty: ILType) =
 
         let mutable attrs = ParameterAttributes.None
         let mutable nm = UNone
@@ -13678,7 +13678,7 @@ namespace ProviderImplementation.ProvidedTypes
               Attributes = attrs
               CustomAttrs  = mkILCustomAttrs (cattrs.ToArray()) }
 
-    type internal ILMethodBuilder(enclosing: ILType, methodName: string, attrs: MethodAttributes, retty: ILType, argtys:ILType[]) =
+    type public ILMethodBuilder(enclosing: ILType, methodName: string, attrs: MethodAttributes, retty: ILType, argtys:ILType[]) =
 
         let ilParams = [| yield ILParameterBuilder(retty); for argty in argtys do yield ILParameterBuilder(argty) |]
         let mutable implflags = MethodImplAttributes.IL
@@ -13710,7 +13710,7 @@ namespace ProviderImplementation.ProvidedTypes
               IsEntryPoint = false }
         override __.ToString() = "builder for " + methodName
 
-    type internal ILPropertyBuilder(nm, attrs: PropertyAttributes, retty: ILType, argtys: ILType[]) =
+    type public ILPropertyBuilder(nm, attrs: PropertyAttributes, retty: ILType, argtys: ILType[]) =
 
         let mutable setMethod = None
         let mutable getMethod = None
@@ -13737,7 +13737,7 @@ namespace ProviderImplementation.ProvidedTypes
               Token = genToken() }
         override __.ToString() = "builder for " + nm
 
-    type internal ILEventBuilder(nm, attrs: EventAttributes) =
+    type public ILEventBuilder(nm, attrs: EventAttributes) =
 
         let mutable addMethod = None
         let mutable removeMethod = None
@@ -13755,7 +13755,7 @@ namespace ProviderImplementation.ProvidedTypes
               Token = genToken()}
         override __.ToString() = "builder for " + nm
 
-    type internal ILTypeBuilder(scoref, nsp: string uoption, nm: string, attrs: TypeAttributes) =
+    type public ILTypeBuilder(scoref, nsp: string uoption, nm: string, attrs: TypeAttributes) =
 
         let mutable extends = None
         let implements = ResizeArray<ILType>()
@@ -13818,7 +13818,7 @@ namespace ProviderImplementation.ProvidedTypes
             }
         override __.ToString() = "builder for " + joinILTypeName nsp nm
 
-    type internal ILModuleBuilder(scoref, moduleName, manifest) =
+    type public ILModuleBuilder(scoref, moduleName, manifest) =
         let typeDefs = ResizeArray<ILTypeBuilder>()
         let cattrs = ResizeArray<ILCustomAttribute>()
 
@@ -13848,7 +13848,7 @@ namespace ProviderImplementation.ProvidedTypes
             } 
         override __.ToString() = "builder for " + moduleName
 
-    type internal ILAssemblyBuilder(assemblyName: AssemblyName, fileName, ilg, attrs : ILCustomAttribute seq) =
+    type public ILAssemblyBuilder(assemblyName: AssemblyName, fileName, ilg, attrs : ILCustomAttribute seq) =
         let cattrs = ResizeArray<ILCustomAttribute>(attrs)
         let manifest = 
             { Name = assemblyName.Name
@@ -13873,12 +13873,12 @@ namespace ProviderImplementation.ProvidedTypes
         override __.ToString() = "builder for " + (assemblyName.ToString())
         
 
-    type internal ExpectedStackState =
+    type public ExpectedStackState =
         | Empty = 1
         | Address = 2
         | Value = 3
 
-    type internal CodeGenerator(assemblyMainModule: ILModuleBuilder, 
+    type public CodeGenerator(assemblyMainModule: ILModuleBuilder, 
                        genUniqueTypeName: (unit -> string), 
                        implicitCtorArgsAsFields: ILFieldBuilder list, 
                        convTypeToTgt: Type -> Type, 
@@ -15267,7 +15267,7 @@ namespace ProviderImplementation.ProvidedTypes
     // AssemblyCompiler: the assembly compiler for generative type providers.
 
     /// Implements System.Reflection.Assembly backed by ILModuleReader over generated bytes 
-    type internal AssemblyCompiler(targetAssembly: ProvidedAssembly, context: ProvidedTypesContext) =
+    type public AssemblyCompiler(targetAssembly: ProvidedAssembly, context: ProvidedTypesContext) =
 
 
         let typeMap = Dictionary<ProvidedTypeDefinition, ILTypeBuilder>(HashIdentity.Reference)
