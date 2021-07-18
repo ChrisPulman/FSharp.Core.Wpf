@@ -6,10 +6,13 @@ on:
   pull_request:
     branches: [ main ]
 
+env:
+        configuration: Release
+
 jobs:
   build:
 
-    runs-on: ubuntu-latest
+    runs-on: windows-latest
 
     steps:
     - uses: actions/checkout@v2
@@ -23,8 +26,8 @@ jobs:
         dotnet-version: 3.1.x
         
     - name: Restore dependencies
-      run: dotnet restore
+      run: dotnet restore src/CP.FSharp.Core.Wpf.sln
     - name: Build
-      run: dotnet build --no-restore
+      run: dotnet build src/CP.FSharp.Core.Wpf.sln --no-restore --configuration=${{ env.configuration }}
     - name: Test
-      run: dotnet test --no-build --verbosity normal
+      run: dotnet test src/CP.FSharp.Core.Wpf.sln --no-build --verbosity normal
