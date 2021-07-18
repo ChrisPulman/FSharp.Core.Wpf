@@ -1,0 +1,44 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+	<PropertyGroup>
+		<TargetFrameworks>net462; netcoreapp3.1; net5.0-Windows;</TargetFrameworks>
+		<UseWPF>true</UseWPF>
+		<AllowedOutputExtensionsInPackageBuildOutputFolder>$(AllowedOutputExtensionsInPackageBuildOutputFolder);.pdb</AllowedOutputExtensionsInPackageBuildOutputFolder>
+		<GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+		<Version>5.0.2</Version>
+		<Authors>Chris Pulman</Authors>
+		<Description>A port of https://github.com/fsprojects/FsXaml to support the latest .net frameworks</Description>
+		<PackageLicenseExpression>MIT</PackageLicenseExpression>
+		<PackageProjectUrl>https://github.com/ChrisPulman/FSharp.Core.Wpf</PackageProjectUrl>
+		<PackageIcon>fswpf.png</PackageIcon>
+		<PackageIconUrl />
+		<RepositoryUrl>https://github.com/ChrisPulman/FSharp.Core.Wpf</RepositoryUrl>
+		<PackageTags>FSharp WPF XAML</PackageTags>
+		<NeutralLanguage>en-GB</NeutralLanguage>
+	</PropertyGroup>
+
+	<ItemGroup>
+		<ProjectReference Include="..\CP.FSharp.Core.Wpf\FSharp.Core.Wpf.fsproj" />
+		<PackageReference Update="FSharp.Core" Version="5.0.2" />
+		<PackageReference Update="System.ValueTuple" Version="4.5.0" />
+		<PackageReference Include="Microsoft.SourceLink.GitHub" Version="1.0.0">
+			<PrivateAssets>all</PrivateAssets>
+			<IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+		</PackageReference>
+	</ItemGroup>
+	
+	<ItemGroup>
+		<Compile Include="ProvidedTypes.fsi" />
+		<Compile Include="ProvidedTypes.fs" />
+		<Compile Include="TypeProvider.Helper.fs" />
+		<Compile Include="XamlParser.fs" />
+		<Compile Include="XamlTypeUtils.fs" />
+		<Compile Include="XamlTypeProvider.fs" />
+		<None Include="..\fswpf.png">
+		  <Pack>True</Pack>
+		  <PackagePath></PackagePath>
+		</None>
+		<None Include="Script1.fsx" />
+	</ItemGroup>
+
+</Project>
